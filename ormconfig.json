@@ -1,0 +1,8 @@
+{
+    "type": "sqlite",
+    "database": "./db/tcg.db",
+    "entities": [
+        "dist/**/*.entity{.ts,.js}"
+    ],
+    "synchronize": true
+}

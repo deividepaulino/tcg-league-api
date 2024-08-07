@@ -1,4 +1,4 @@
-CREATE TABLE tokens (
+CREATE TABLE token (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     usuario_id INTEGER NOT NULL,
     token TEXT NOT NULL,
