@@ -54,7 +54,7 @@ export class AuthService {
 
     if (!user.emailConfirmado) {
       this.logger.warn('E-mail não confirmado');
-      return { message: 'E-mail não confirmado' };
+      return { message: 'E-mail nao confirmado' };
     }
 
     // Remover tokens ativos para o usuário
