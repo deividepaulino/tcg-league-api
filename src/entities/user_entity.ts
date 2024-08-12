@@ -1,7 +1,8 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Token } from './token_entity';
+import { Deck } from './deck/deck_entity';
 
-@Entity('usuario')
+@Entity('usuarios') // 'usuarios' para pluralidade, se estiver seguindo a convenção
 export class Usuario {
   @PrimaryGeneratedColumn()
   id: number;
@@ -32,4 +33,7 @@ export class Usuario {
 
   @OneToMany(() => Token, token => token.usuario)
   tokens: Token[];
+
+  @OneToMany(() => Deck, deck => deck.usuario)
+  decks: Deck[];
 }

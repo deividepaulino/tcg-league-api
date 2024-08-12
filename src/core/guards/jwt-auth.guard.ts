@@ -14,8 +14,8 @@ export class CustomAuthGuard implements CanActivate {
     const request: Request = context.switchToHttp().getRequest();
     const { method, url } = request;
 
-    // Permitir o POST para criar usuários sem autenticação
-    if (method === 'POST' && url === '/usuarios') {
+    // Permitir POST para criar usuários e login sem autenticação
+    if (method === 'POST' && (url === '/usuarios' || url === '/auth/login')) {
       return true;
     }
 
