@@ -4,9 +4,9 @@ import { Usuario } from './entities/user_entity';
 import { Permissao } from './entities/permission_entity';
 import { Token } from './entities/token_entity';
 import { UsuarioPermissao } from './entities/user_permission';
-import { UsuarioController } from './users/user_controller';
-import { UsuarioService } from './users/user_service';
 import { AuthModule } from './auth/auth.module';
+import { UsuarioModule } from './users/user_module';
+import { CustomAuthGuard } from './core/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -17,10 +17,15 @@ import { AuthModule } from './auth/auth.module';
       synchronize: true, 
     }),
     TypeOrmModule.forFeature([Usuario, Permissao, Token, UsuarioPermissao]),
-    AuthModule,
-    // Outros módulos
+    AuthModule, // Importa o AuthModule para usar o JwtService
+    UsuarioModule,
   ],
-  controllers: [UsuarioController], // Registrar o controlador
-  providers: [UsuarioService], // Registrar o serviço
+  controllers: [],
+  providers: [
+    {
+      provide: 'APP_GUARD',
+      useClass: CustomAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

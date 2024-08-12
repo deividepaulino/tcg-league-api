@@ -6,7 +6,7 @@ import { Usuario } from '../entities/user_entity';
 import { Token } from '../entities/token_entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from 'src/core/jwt/jwt_strategy';
+import { JwtStrategy } from '../core/jwt/jwt_strategy'; // Ajuste o caminho se necessário
 
 @Module({
   imports: [
@@ -19,5 +19,6 @@ import { JwtStrategy } from 'src/core/jwt/jwt_strategy';
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
+  exports: [JwtModule, AuthService], // Certifique-se de exportar JwtModule
 })
 export class AuthModule {}
