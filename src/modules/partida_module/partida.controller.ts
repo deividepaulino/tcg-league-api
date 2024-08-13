@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
 import { PartidaService } from './partida.service';
 
 @Controller('partidas')
@@ -21,8 +21,12 @@ export class PartidaController {
   }
 
   @Post()
-  create(@Body('jogador1Id') jogador1Id: number, @Body('jogador2Id') jogador2Id: number) {
-    return this.partidaService.create(jogador1Id, jogador2Id);
+  create(
+    @Body('jogador1Id') jogador1Id: number,
+    @Body('jogador2Id') jogador2Id: number,
+    @Body('torneioId') torneioId: number,
+  ) {
+    return this.partidaService.create(jogador1Id, jogador2Id, torneioId);
   }
 
   @Put(':id')

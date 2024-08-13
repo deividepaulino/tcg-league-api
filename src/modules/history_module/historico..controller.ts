@@ -1,10 +1,9 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { HistoricoPartidaService } from './historico..service';
 
-
 @Controller('historico-partidas')
 export class HistoricoPartidaController {
-  constructor(private readonly historicoPartidaService: HistoricoPartidaService) {}
+ constructor(private readonly historicoPartidaService: HistoricoPartidaService) {}
 
   @Get()
   findAll() {
@@ -18,7 +17,6 @@ export class HistoricoPartidaController {
 
   @Get('/usuario/:usuarioId')
   findByUsuario(@Param('usuarioId') usuarioId: number) {
-    
     return this.historicoPartidaService.findByUsuario(usuarioId);
   }
 }

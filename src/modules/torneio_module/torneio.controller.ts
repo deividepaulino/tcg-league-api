@@ -41,4 +41,14 @@ export class TorneioController {
   ) {
     return this.torneioService.ingressarNoTorneio(codigoAcesso, usuarioId);
   }
+
+  @Post(':id/soltar-rodada')
+  soltarRodada(@Param('id') torneioId: number) {
+    return this.torneioService.soltarRodada(torneioId);
+  }
+
+  @Get('user/:userId/detalhes')
+  async getDetalhesPorUsuario(@Param('userId') userId: number) {
+    return this.torneioService.getDetalhesPorUsuario(userId);
+  }
 }

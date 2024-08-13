@@ -1,4 +1,3 @@
-// torneio.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TorneioService } from './torneio.service';
@@ -11,9 +10,10 @@ import { UsuarioModule } from 'src/users/user_module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Torneio, Participante, Classificacao]),
-    UsuarioModule, // Importar o módulo que fornece UsuarioRepository
+    UsuarioModule,
   ],
   providers: [TorneioService],
   controllers: [TorneioController],
+  exports: [TorneioService], // Adicione esta linha para exportar o serviço
 })
 export class TorneioModule {}

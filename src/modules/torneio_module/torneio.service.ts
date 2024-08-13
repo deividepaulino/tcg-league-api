@@ -8,7 +8,6 @@ import { Usuario } from 'src/entities/user_entity';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 
-
 @Injectable()
 export class TorneioService {
   constructor(
@@ -18,14 +17,13 @@ export class TorneioService {
     private readonly participanteRepository: Repository<Participante>,
     @InjectRepository(Classificacao)
     private readonly classificacaoRepository: Repository<Classificacao>,
-     @InjectRepository(Usuario)
+    @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
   ) {}
 
-    private generateUniqueCode(length: number = 8): string {
+  private generateUniqueCode(length: number = 8): string {
     return randomBytes(length).toString('hex').slice(0, length).toUpperCase();
   }
-
 
   async create(nome: string, dataAbertura: Date, dataEncerramento?: Date): Promise<Torneio> {
     const codigo = this.generateUniqueCode();
@@ -34,7 +32,7 @@ export class TorneioService {
       nome,
       data_abertura: dataAbertura,
       data_encerramento: dataEncerramento,
-      codigo, // Adicione o código gerado
+      codigo,
     });
 
     return this.torneioRepository.save(torneio);
@@ -55,55 +53,54 @@ export class TorneioService {
     return this.torneioRepository.find();
   }
 
-   async findByUserId(userId: number) {
-    // Busca os torneios onde o usuário está participando
+  async findByUserId(userId: number) {
     const torneios = await this.participanteRepository
       .createQueryBuilder('participante')
       .leftJoinAndSelect('participante.torneio', 'torneio')
-      .where('participante.usuarioId = :userId', { userId })
+      .where('participante.usuario.id = :userId', { userId }) // Atualizado para usar a relação correta
       .getMany();
 
-    // Extrai a lista de torneios únicos
     const uniqueTorneios = torneios.map(participante => participante.torneio);
     return uniqueTorneios;
   }
 
-async ingressarNoTorneio(codigoAcesso: string, usuarioId: number): Promise<Participante> {
-  const torneio = await this.torneioRepository.findOne({
-    where: { codigo: codigoAcesso }, // Condição para encontrar o torneio
-  });
+  async ingressarNoTorneio(codigoAcesso: string, usuarioId: number): Promise<Participante> {
+    const torneio = await this.torneioRepository.findOne({
+      where: { codigo: codigoAcesso },
+    });
 
-  if (!torneio) {
-    throw new NotFoundException('Torneio não encontrado.');
+    if (!torneio) {
+      throw new NotFoundException('Torneio não encontrado.');
+    }
+
+    const usuario = await this.usuarioRepository.findOne({
+      where: { id: usuarioId },
+    });
+
+    if (!usuario) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    const participanteExistente = await this.participanteRepository.findOne({
+      where: { torneio, usuario },
+    });
+
+    if (participanteExistente) {
+      throw new ConflictException('Usuário já está inscrito neste torneio.');
+    }
+
+    const novoParticipante = this.participanteRepository.create({
+      usuario,
+      torneio,
+    });
+
+    return this.participanteRepository.save(novoParticipante);
   }
 
-  const usuario = await this.usuarioRepository.findOne({
-    where: { id: usuarioId }, // Condição para encontrar o usuário
-  });
-
-  if (!usuario) {
-    throw new NotFoundException('Usuário não encontrado.');
-  }
-
-  const participanteExistente = await this.participanteRepository.findOne({
-    where: { torneio, usuario }, // Condições para verificar a existência
-  });
-
-  if (participanteExistente) {
-    throw new ConflictException('Usuário já está inscrito neste torneio.');
-  }
-
-  const novoParticipante = this.participanteRepository.create({
-    usuario,
-    torneio,
-  });
-
-  return this.participanteRepository.save(novoParticipante);
-}
   async findParticipantes(id: number): Promise<{ id: number, nome: string, deck: { id: number, nome: string } }[]> {
     const torneio = await this.torneioRepository.findOne({
       where: { id },
-      relations: ['participantes', 'participantes.deck', 'participantes.usuario'], // Incluindo participantes, deck e usuário
+      relations: ['participantes', 'participantes.deck', 'participantes.usuario'],
     });
 
     if (!torneio) {
@@ -112,9 +109,86 @@ async ingressarNoTorneio(codigoAcesso: string, usuarioId: number): Promise<Parti
 
     return torneio.participantes.map(participante => ({
       id: participante.id,
-      nome: participante.usuario.nome, // Presumindo que `nome` está em Usuario
-      deck: participante.deck ? { id: participante.deck.id, nome: participante.deck.deck_name } : null, // Incluindo informações do deck, se disponível
+      nome: participante.usuario.nome,
+      deck: participante.deck ? { id: participante.deck.id, nome: participante.deck.deck_name } : null,
     }));
   }
 
+  async soltarRodada(torneioId: number): Promise<void> {
+    const torneio = await this.torneioRepository.findOne({
+      where: { id: torneioId },
+      relations: ['participantes', 'classificacoes'],
+    });
+
+    if (!torneio) {
+      throw new NotFoundException(`Torneio com id ${torneioId} não encontrado`);
+    }
+
+    const participantes = torneio.participantes;
+
+    if (participantes.length < 2) {
+      throw new ConflictException('Número insuficiente de participantes para soltar uma rodada.');
+    }
+
+    const classificacoes = await this.classificacaoRepository.find({
+      where: { torneio },
+      order: { pontuacao: 'DESC', vitorias: 'DESC' },
+    });
+
+    const partidas = [];
+    const participantesEmparelhados = new Set<number>();
+
+    for (const classificacao of classificacoes) {
+      const participante = classificacao.usuario;
+
+      if (!participantesEmparelhados.has(participante.id)) {
+        const oponente = classificacoes.find(c => !participantesEmparelhados.has(c.usuario.id));
+
+        if (oponente) {
+          participantesEmparelhados.add(participante.id);
+          participantesEmparelhados.add(oponente.usuario.id);
+
+          partidas.push({
+            jogador1: participante,
+            jogador2: oponente.usuario,
+            placar_jogador1: 0,
+            placar_jogador2: 0,
+            status: 'em andamento',
+            torneio: torneio,
+          });
+        }
+      }
+    }
+
+    await this.classificacaoRepository.save(partidas);
+  }
+
+  async getDetalhesPorUsuario(userId: number) {
+    const torneios = await this.findByUserId(userId);
+
+    const resultados = await Promise.all(
+      torneios.map(async torneio => {
+        const participantes = await this.participanteRepository.find({
+          where: { torneio },
+          relations: ['usuario', 'deck'],
+        });
+
+        const participanteAtual = participantes.find(participante => participante.usuario.id === userId);
+        const posicaoAtual = participanteAtual ? participantes.indexOf(participanteAtual) + 1 : null;
+        const deckAtual = participanteAtual ? participanteAtual.deck : null;
+
+        return {
+          torneioId: torneio.id,
+          torneioNome: torneio.nome,
+          posicaoAtual,
+          deckAtual: deckAtual ? { id: deckAtual.id, nome: deckAtual.deck_name } : null,
+          quantidadeParticipantes: participantes.length,
+          dataInicio: torneio.data_abertura,
+          status: torneio.status,
+        };
+      }),
+    );
+
+    return resultados;
+  }
 }

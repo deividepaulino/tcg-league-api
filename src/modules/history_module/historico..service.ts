@@ -11,7 +11,9 @@ export class HistoricoPartidaService {
   ) {}
 
   findAll() {
-    return this.historicoPartidaRepository.find();
+    return this.historicoPartidaRepository.find({
+      relations: ['jogador1', 'jogador2', 'deck1', 'deck2', 'torneio'],
+    });
   }
 
   findOne(id: number) {
@@ -19,18 +21,12 @@ export class HistoricoPartidaService {
   }
 
   findByUsuario(usuarioId: number) {
-
-        return this.historicoPartidaRepository.find({
+    return this.historicoPartidaRepository.find({
       where: [
         { jogador1: { id: usuarioId } },
         { jogador2: { id: usuarioId } }
       ],
-      relations: ['jogador1', 'jogador2', 'deck1', 'deck2', 'torneio'] 
-      
+      relations: ['jogador1', 'jogador2', 'deck1', 'deck2', 'torneio'],
     });
-
-
-
-  
   }
 }

@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Partida } from 'src/entities/partida_entity';
 import { Usuario } from 'src/entities/user_entity';
 import { Repository } from 'typeorm';
+import { TorneioService } from '../torneio_module/torneio.service';
 
 @Injectable()
 export class PartidaService {
@@ -11,6 +12,7 @@ export class PartidaService {
     private readonly partidaRepository: Repository<Partida>,
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
+    private readonly torneioService: TorneioService,
   ) {}
 
   findAll() {
@@ -29,10 +31,19 @@ export class PartidaService {
       .getMany();
   }
 
-  create(jogador1Id: number, jogador2Id: number) {
+  async create(jogador1Id: number, jogador2Id: number, torneioId: number) {
+    const participantes = await this.torneioService.findParticipantes(torneioId);
+    
+    const jogador1 = participantes.find(p => p.id === jogador1Id);
+    const jogador2 = participantes.find(p => p.id === jogador2Id);
+
+    if (!jogador1 || !jogador2) {
+      throw new NotFoundException('Um ou ambos os jogadores não foram encontrados no torneio.');
+    }
+
     const partida = this.partidaRepository.create({
-      jogador1: { id: jogador1Id } as Usuario,
-      jogador2: { id: jogador2Id } as Usuario,
+      jogador1: { id: jogador1.id } as Usuario,
+      jogador2: { id: jogador2.id } as Usuario,
     });
     return this.partidaRepository.save(partida);
   }
