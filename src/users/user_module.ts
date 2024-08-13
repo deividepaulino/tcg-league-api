@@ -8,5 +8,7 @@ import { Usuario } from 'src/entities/user_entity';
   imports: [TypeOrmModule.forFeature([Usuario])],
   controllers: [UsuarioController],
   providers: [UsuarioService],
+    exports: [TypeOrmModule.forFeature([Usuario])] // Exportar o repositório
+
 })
 export class UsuarioModule {}

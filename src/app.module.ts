@@ -38,7 +38,6 @@ import { HistoricoPartida } from './entities/historico_partidas_entity';
     Torneio,
     HistoricoPartida,
   ],
-  synchronize: true,
 }),
 
     AuthModule, // Importa o AuthModule para usar o JwtService

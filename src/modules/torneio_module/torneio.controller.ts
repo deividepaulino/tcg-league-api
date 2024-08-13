@@ -28,4 +28,17 @@ export class TorneioController {
   findByUserId(@Param('userId') userId: number) {
     return this.torneioService.findByUserId(userId);
   }
+
+  @Get(':id/participantes')
+  findParticipantes(@Param('id') id: number) {
+    return this.torneioService.findParticipantes(id);
+  }
+
+  @Post('ingressar')
+  ingressarNoTorneio(
+    @Body('codigo_acesso') codigoAcesso: string,
+    @Body('usuario_id') usuarioId: number,
+  ) {
+    return this.torneioService.ingressarNoTorneio(codigoAcesso, usuarioId);
+  }
 }
