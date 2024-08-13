@@ -28,7 +28,4 @@ export class TorneioController {
   findByUserId(@Param('userId') userId: number) {
     return this.torneioService.findByUserId(userId);
   }
-
-
-  
 }

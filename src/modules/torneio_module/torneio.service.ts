@@ -1,9 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { randomBytes } from 'crypto';
 import { Classificacao } from 'src/entities/torneio/classificacao_entity';
 import { Participante } from 'src/entities/torneio/participante_entity';
 import { Torneio } from 'src/entities/torneio/torneio_entity';
 import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+
 
 @Injectable()
 export class TorneioService {
@@ -16,11 +19,19 @@ export class TorneioService {
     private readonly classificacaoRepository: Repository<Classificacao>,
   ) {}
 
+    private generateUniqueCode(length: number = 8): string {
+    return randomBytes(length).toString('hex').slice(0, length).toUpperCase();
+  }
+
+
   async create(nome: string, dataAbertura: Date, dataEncerramento?: Date): Promise<Torneio> {
+    const codigo = this.generateUniqueCode();
+
     const torneio = this.torneioRepository.create({
       nome,
       data_abertura: dataAbertura,
       data_encerramento: dataEncerramento,
+      codigo, // Adicione o código gerado
     });
 
     return this.torneioRepository.save(torneio);

@@ -19,6 +19,9 @@ export class Torneio {
   @Column({ type: 'date', nullable: true })
   data_encerramento?: Date;
 
+  @Column({ type: 'text', unique: true })
+  codigo: string;
+
   @OneToMany(() => Participante, participante => participante.torneio)
   participantes: Participante[];
 
