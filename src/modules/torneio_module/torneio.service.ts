@@ -191,4 +191,44 @@ export class TorneioService {
 
     return resultados;
   }
+
+   // Método para buscar a tabela do torneio do qual o usuário está participando
+  async getTabelaUsuario(userId: number, torneioId: number) {
+    const torneio = await this.torneioRepository.findOne({
+      where: { id: torneioId },
+      relations: ['classificacoes', 'classificacoes.usuario', 'classificacoes.deck'],
+    });
+
+    if (!torneio) {
+      throw new NotFoundException(`Torneio com id ${torneioId} não encontrado`);
+    }
+
+    const classificacoes = torneio.classificacoes;
+
+    const tabela = classificacoes.map(classificacao => ({
+      posicao: classificacao.posicao,
+      nome: classificacao.usuario.nome,
+      deck: classificacao.deck ? { id: classificacao.deck.id, nome: classificacao.deck.deck_name } : null,
+      vitorias: classificacao.vitorias,
+      derrotas: classificacao.partidasJogadas - classificacao.vitorias, 
+      pontuacao: classificacao.pontuacao,
+      empates: classificacao.empates,
+    }));
+
+    return tabela;
+  }
+
+  async incrementarPartidasJogadas(torneioId: number, usuarioId: number) {
+  const classificacao = await this.classificacaoRepository.findOne({
+    where: { torneio: { id: torneioId }, usuario: { id: usuarioId } },
+  });
+
+  if (!classificacao) {
+    throw new NotFoundException('Classificação não encontrada.');
+  }
+
+  classificacao.partidasJogadas += 1;
+  return this.classificacaoRepository.save(classificacao);
+}
+
 }

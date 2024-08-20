@@ -48,9 +48,33 @@ export class PartidaService {
     return this.partidaRepository.save(partida);
   }
 
-  update(id: number, placarJogador1: number, placarJogador2: number) {
-    return this.partidaRepository.update(id, { placar_jogador1: placarJogador1, placar_jogador2: placarJogador2 });
+async update(id: number, placarJogador1: number, placarJogador2: number) {
+  const partida = await this.partidaRepository.findOne({
+    where: { id },
+    relations: ['jogador1', 'jogador2', 'torneio'],
+  });
+
+  if (!partida) {
+    throw new NotFoundException('Partida não encontrada.');
   }
+
+  // Atualiza os placares da partida
+  await this.partidaRepository.update(id, {
+    placar_jogador1: placarJogador1,
+    placar_jogador2: placarJogador2,
+  });
+
+  // Incrementa o número de partidas jogadas na classificação dos jogadores
+  const classificacaoJogador1 = await this.torneioService.incrementarPartidasJogadas(partida.torneio.id, partida.jogador1.id);
+  const classificacaoJogador2 = await this.torneioService.incrementarPartidasJogadas(partida.torneio.id, partida.jogador2.id);
+
+  return {
+    mensagem: 'Partida atualizada e número de partidas jogadas incrementado para os jogadores.',
+    classificacaoJogador1,
+    classificacaoJogador2,
+  };
+}
+
 
   finish(id: number) {
     return this.partidaRepository.update(id, { status: 'finalizado' });

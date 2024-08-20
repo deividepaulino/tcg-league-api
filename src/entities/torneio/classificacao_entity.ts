@@ -3,7 +3,7 @@ import { Torneio } from './torneio_entity';
 import { Usuario } from '../user_entity';
 import { Deck } from '../deck/deck_entity';
 
-@Entity('classificao')
+@Entity('classificacao')
 export class Classificacao {
   @PrimaryGeneratedColumn()
   id: number;
@@ -28,4 +28,10 @@ export class Classificacao {
 
   @Column({ type: 'int', default: 0 })
   vitorias: number;
+
+  @Column({ type: 'int', default: 0 })
+  partidasJogadas: number;
+
+  @Column({default: 0}) 
+  empates: number;
 }

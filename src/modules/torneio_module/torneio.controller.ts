@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common';
 import { TorneioService } from './torneio.service';
 
 @Controller('torneios')
@@ -27,6 +27,11 @@ export class TorneioController {
   @Get('user/:userId')
   findByUserId(@Param('userId') userId: number) {
     return this.torneioService.findByUserId(userId);
+  }
+
+  @Get(':id/tabela')
+  async getTabela(@Param('id') torneioId: number, @Query('userId') userId: number) {
+    return this.torneioService.getTabelaUsuario(userId, torneioId);
   }
 
   @Get(':id/participantes')
